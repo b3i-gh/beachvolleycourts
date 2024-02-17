@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class UserController {
@@ -26,15 +27,13 @@ public class UserController {
         return userService.findAll();
     }
 
-//    @GetMapping(path = "/users/{id}")
-//    public ResponseEntity<User> findUserById(@PathVariable("id") String id){
-//        Optional<User> foundUser = userService.findById(id);
-//        if(foundUser.isPresent()){
-//            new ResponseEntity<>(HttpStatus.NOT_FOUND));
-//        } else {
-//            return new ResponseEntity<>(foundUser, HttpStatus.OK);
-//        }
-//    }
+    @GetMapping(path = "/users/{id}")
+    public ResponseEntity<User> findUserById(@PathVariable("id") String id){
+        Optional<User> foundUser = userService.findById(id);
+        return foundUser.map(User -> {
+            return new ResponseEntity<>(User, HttpStatus.OK);
+        }).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
 
     @PutMapping(path = "/users/{id}")
     public ResponseEntity<User> fullUpdateUser(@PathVariable("id") String id, @RequestBody User user){
@@ -62,6 +61,5 @@ public class UserController {
         return new ResponseEntity(HttpStatus.NO_CONTENT);
     }
 
-    // TODO find by user ID returns optional?
     // TODO find by firstName/lastName
 }

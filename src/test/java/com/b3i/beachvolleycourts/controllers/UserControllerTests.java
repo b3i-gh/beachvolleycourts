@@ -2,6 +2,7 @@ package com.b3i.beachvolleycourts.controllers;
 
 import com.b3i.beachvolleycourts.domains.User;
 import com.b3i.beachvolleycourts.services.UserService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.AfterEach;
@@ -19,6 +20,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import com.b3i.beachvolleycourts.TestDataUtil;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import java.time.LocalDate;
 
 
 @SpringBootTest
@@ -48,7 +51,7 @@ public class UserControllerTests {
 
     @Test
     public void createUserShouldSaveUserAndReturnCREATEDHttpResponse() throws Exception {
-        User testUserA = TestDataUtil.createTestUserB();
+        User testUserA = TestDataUtil.createTestUserA();
         String userJson = objectMapper.writeValueAsString(testUserA);
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/users")
@@ -76,40 +79,155 @@ public class UserControllerTests {
     }
 
     @Test
-    public void findAllUsersShouldReturnAllUsers(){
+    public void findAllUsersShouldReturnAllUsers() throws Exception {
+        User testUserA = TestDataUtil.createTestUserA();
+        User testUserB = TestDataUtil.createTestUserB();
+        userService.save(testUserA);
+        userService.save(testUserB);
 
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].id").isString()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[1].id").isString()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[0].firstName").value(testUserA.getFirstName())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$[1].firstName").value(testUserB.getFirstName())
+        );
     }
 
     @Test
-    public void findUserByIdShouldReturnTheUserIfTheUserExists(){
+    public void findUserByIdShouldReturnTheUserAndOKHttpResponseIfTheUserExists() throws Exception{
+        User testUserA = TestDataUtil.createTestUserA();
+        userService.save(testUserA);
 
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/users/" + testUserA.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.id").value(testUserA.getId())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.firstName").value(testUserA.getFirstName())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.lastName").value(testUserA.getLastName())
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
     }
 
     @Test
-    public void findUserByIdShouldReturnNOTFOUNDHttpResponseIfTheUserDoesntExist(){
-
+    public void findUserByIdShouldReturnNOTFOUNDHttpResponseIfTheUserDoesntExist() throws Exception{
+        mockMvc.perform(
+                MockMvcRequestBuilders.get("/users/notExistingId")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNotFound()
+        );
     }
 
     @Test
-    public void fullUpdateUserSHouldUpdateTheUsersAndReturnOKHttpResponse(){
+    public void fullUpdateUserShouldUpdateTheUsersAndReturnOKHttpResponse() throws Exception{
+        User testUserA = TestDataUtil.createTestUserA();
+        userService.save(testUserA);
 
+        User updatedUser = TestDataUtil.createTestUserA();
+        updatedUser.setId(testUserA.getId());
+        updatedUser.setFirstName("UPDATED first name");
+        updatedUser.setFirstName("UPDATED last name");
+        updatedUser.setEmail("updated@updated.com");
+        updatedUser.setPassword("updatedPassword");
+        updatedUser.setAdmin(false);
+        updatedUser.setMembershipExpiryDate(LocalDate.now());
+        updatedUser.setMembershipExpiryDate(LocalDate.now());
+
+        String userJson = objectMapper.writeValueAsString(updatedUser);
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/users/" + testUserA.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.id").isString()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.firstName").value(updatedUser.getFirstName())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.lastName").value(updatedUser.getLastName())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.email").value(updatedUser.getEmail())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.password").value(updatedUser.getPassword())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.medicalCertificateExpiryDate").value(updatedUser.getMedicalCertificateExpiryDate().toString())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.membershipExpiryDate").value(updatedUser.getMembershipExpiryDate().toString())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.admin").value(updatedUser.isAdmin())
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
     }
 
     @Test
-    public void fullUpdateUserShouldReturnNOTFOUNDHttpResponseIfTheUserDoesntExist() {
+    public void fullUpdateUserShouldReturnNOTFOUNDHttpResponseIfTheUserDoesntExist() throws Exception {
+        User testUserA = TestDataUtil.createTestUserA();
+        String userJson = objectMapper.writeValueAsString(testUserA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/users/notExistingId")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNotFound()
+        );
     }
 
     @Test
-    public void partialUpdateUserSHouldUpdateTheUsersAndReturnOKHttpResponse(){
+    public void partialUpdateUserShouldUpdateTheUsersAndReturnOKHttpResponse() throws Exception{
+        User testUserA = TestDataUtil.createTestUserA();
+        userService.save(testUserA);
 
+        User updatedUser = TestDataUtil.createTestUserA();
+        updatedUser.setFirstName("UPDATED first name");
+        String userJson = objectMapper.writeValueAsString(updatedUser);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.patch("/users/" + testUserA.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.id").isString()
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.firstName").value(updatedUser.getFirstName())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.lastName").value(testUserA.getLastName())
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
     }
 
     @Test
-    public void partialUpdateUserShouldReturnNOTFOUNDHttpResponseIfTheUserDoesntExist() {
+    public void partialUpdateUserShouldReturnNOTFOUNDHttpResponseIfTheUserDoesntExist() throws Exception{
+        User testUserA = TestDataUtil.createTestUserA();
+        String userJson = objectMapper.writeValueAsString(testUserA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.patch("/users/notExistingId")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(userJson)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNotFound()
+        );
     }
 
     @Test
-    public void deleteShouldDeteleTheUserAndReturnNOCONTENTHttpResponse(){
-
+    public void deleteShouldDeleteTheUserAndReturnNOCONTENTHttpResponse() throws Exception{
+        User testUserA = TestDataUtil.createTestUserA();
+        userService.save(testUserA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.delete("/users/" + testUserA.getId())
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNoContent()
+        );
     }
 }
