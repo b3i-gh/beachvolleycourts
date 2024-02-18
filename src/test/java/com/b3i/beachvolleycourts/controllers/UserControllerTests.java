@@ -2,7 +2,6 @@ package com.b3i.beachvolleycourts.controllers;
 
 import com.b3i.beachvolleycourts.domains.User;
 import com.b3i.beachvolleycourts.services.UserService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.AfterEach;

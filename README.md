@@ -12,7 +12,7 @@ Administrators will have the ability to confirm reservation requests, validate c
 
 ### Data Model:
 * users (name, surname, email, password, membershipExpiryDate, medicalCertificateExpiryDate, isAdmin)
-* openingHours (date, startTime, endTime, bookings {name, startTime, endTime, user, payment (reference?), playerList{name, surname}, isAproved, notes, cancellationDate, cancellationNotes})
+* schedules (date, startTime, endTime, bookings {name, startTime, endTime, user, payment (reference?), playerList{name, surname}, isAproved, notes, cancellationDate, cancellationNotes})
 * payments (date, user, amount, type, isConfirmed, confirmedBy)
 
 ## v1.0:
