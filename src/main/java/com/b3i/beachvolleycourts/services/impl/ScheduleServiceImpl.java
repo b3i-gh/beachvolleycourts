@@ -61,5 +61,3 @@ public class ScheduleServiceImpl implements ScheduleService {
     }
 }
 
-// TODO find by date, time period?
-// TODO filter only free slots?

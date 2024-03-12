@@ -5,12 +5,14 @@ import com.b3i.beachvolleycourts.domains.Schedule;
 import com.b3i.beachvolleycourts.repositories.BookingRepository;
 import com.b3i.beachvolleycourts.services.BookingService;
 import com.b3i.beachvolleycourts.services.ScheduleService;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Service
 public class BookingServiceImpl implements BookingService {
     private BookingRepository bookingRepository;
     private ScheduleService scheduleService;
@@ -29,7 +31,7 @@ public class BookingServiceImpl implements BookingService {
         if(booking.isPresent())
             return booking;
         else
-            throw new RuntimeException("Booking does not exists");
+            return null;
     }
 
     @Override

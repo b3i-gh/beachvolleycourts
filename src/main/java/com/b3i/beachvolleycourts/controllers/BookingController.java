@@ -25,11 +25,11 @@ public class BookingController {
     @GetMapping(path = "/bookings/{id}")
     public ResponseEntity<Booking> findBookingById(@PathVariable("id") String id) {
         Optional<Booking> foundBooking = bookingService.findBookingById(id);
-        return foundBooking.map(booking -> new ResponseEntity<>(booking, HttpStatus.OK)).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+        return (foundBooking != null) ? new ResponseEntity<>(foundBooking.get(), HttpStatus.OK) : (new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping(path = "/schedules/{scheduleId}/bookings")
-    public ResponseEntity<List<Booking>> findBookingsByScheduleById(@PathVariable("scheduleId") String scheduleId) {
+    public ResponseEntity<List<Booking>> findBookingsByScheduleId(@PathVariable("scheduleId") String scheduleId) {
         Optional<Schedule> foundSchedule = scheduleService.findById(scheduleId);
         if (!foundSchedule.isPresent())
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -45,8 +45,7 @@ public class BookingController {
         if (!foundSchedule.isPresent())
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         else {
-            if (LocalTime.parse(booking.getEndTime()).isBefore(LocalTime.parse(booking.getStartTime()))
-                    || LocalTime.parse(booking.getEndTime()).isAfter(LocalTime.parse(foundSchedule.get().getEndTime()))
+            if (LocalTime.parse(booking.getEndTime()).isAfter(LocalTime.parse(foundSchedule.get().getEndTime()))
                     || LocalTime.parse(booking.getStartTime()).isBefore(LocalTime.parse(foundSchedule.get().getStartTime())))
                 return new ResponseEntity(booking, HttpStatus.NOT_ACCEPTABLE);
 
