@@ -60,3 +60,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         scheduleRepository.deleteById(id);
     }
 }
+
+// TODO find by date, time period?
+// TODO filter only free slots?

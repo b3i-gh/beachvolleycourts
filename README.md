@@ -12,21 +12,22 @@ Administrators will have the ability to confirm reservation requests, validate c
 
 ### Data Model:
 * users (name, surname, email, password, membershipExpiryDate, medicalCertificateExpiryDate, isAdmin)
-* schedules (date, startTime, endTime, bookings {name, startTime, endTime, user, payment (reference?), playerList{name, surname}, isAproved, notes, cancellationDate, cancellationNotes})
-* payments (date, user, amount, type, isConfirmed, confirmedBy)
+* schedules (id, date, startTime, endTime, bookings {name, startTime, endTime, user, payment (reference?), playerList{name, surname}, isAproved, notes, cancellationDate, cancellationNotes})
 
 ## v1.0:
-* Administrative Options (Reservation Confirmation, Payment Confirmation, Direct Course Input, Forced Reservation Cancellation)
+* Administrative Options (Booking Confirmation, Payment Confirmation, Direct Course Input, Forced Booking Cancellation)
 * Graphic interface
 * Weekend Reservation Requests
 
 ## v2.0:
 * Mobile implementation
 * Login and User/Admin Management
+* User registration
 * Summary of Personal Reservations
 * Reservation Cancellation
 * Integration with Google Calendar
 * Integration with Payment Systems (?)
+* Adding payments (date, user, amount, type, isConfirmed, confirmedBy) to the model
 * Reservation Confirmation Notifications (Push Notification / Email / SMS)
 ## v3.0:
 * Merchandising
