@@ -33,3 +33,19 @@ Administrators will have the ability to confirm reservation requests, validate c
 * Merchandising
 * Membership Request/Renewal
 * Automatic generation and sending of Payment Receipt Documents
+
+
+
+# todo:
+* booking 
+    * TEST: findBookingById > found / not found
+    * TEST: findBookingsByScheduleById > found / not found
+    * TEST: save > date before now
+    * TEST: save > dates outside of the schedule
+    * TEST: save > ok
+* when you create a booking you should test the maximum capacity of a schedule slot
+
+
+* Administrative Options (Booking Confirmation, Payment Confirmation, Direct Course Input, Forced Booking Cancellation)
+* Graphic interface
+* Weekend Reservation Requests
