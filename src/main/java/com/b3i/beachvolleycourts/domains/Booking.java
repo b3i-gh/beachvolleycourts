@@ -4,16 +4,20 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDate;
 import java.util.List;
 
+@Document
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class Booking {
-    private String id;
+    @Id
+    private String bookingId;
     private String name;
     private String startTime;
     private String endTime;
@@ -23,5 +27,6 @@ public class Booking {
     private String notes;
     private LocalDate cancellationDate;
     private String cancellationNotes;
-    // TODO: private Payment paymennt;
+    private String scheduleId;
+    // TODO: private Payment payment;
 }

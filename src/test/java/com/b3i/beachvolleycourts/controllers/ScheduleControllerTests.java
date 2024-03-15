@@ -50,7 +50,7 @@ public class ScheduleControllerTests {
 
     @Test
     public void createScheduleShouldSaveScheduleAndReturnCREATEDHttpResponse() throws Exception {
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
+        Schedule testScheduleA = TestDataUtil.createEmptyTestSchedule();
         String scheduleJson = objectMapper.writeValueAsString(testScheduleA);
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/schedules")
@@ -96,7 +96,7 @@ public class ScheduleControllerTests {
 
     @Test
     public void findScheduleByIdShouldReturnTheScheduleAndOKHttpResponseIfTheScheduleExists() throws Exception{
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
+        Schedule testScheduleA = TestDataUtil.createEmptyTestSchedule();
         scheduleService.save(testScheduleA);
 
         mockMvc.perform(
@@ -127,10 +127,10 @@ public class ScheduleControllerTests {
 
     @Test
     public void fullUpdateScheduleShouldUpdateTheSchedulesAndReturnOKHttpResponse() throws Exception{
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
+        Schedule testScheduleA = TestDataUtil.createEmptyTestSchedule();
         scheduleService.save(testScheduleA);
 
-        Schedule updatedSchedule = TestDataUtil.createTestScheduleA();
+        Schedule updatedSchedule = TestDataUtil.createEmptyTestSchedule();
         updatedSchedule.setId(testScheduleA.getId());
         updatedSchedule.setDate(LocalDate.now().plusDays(2));
         updatedSchedule.setStartTime("11:00:00");
@@ -156,7 +156,7 @@ public class ScheduleControllerTests {
 
     @Test
     public void fullUpdateScheduleShouldReturnNOTFOUNDHttpResponseIfTheScheduleDoesntExist() throws Exception {
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
+        Schedule testScheduleA = TestDataUtil.createEmptyTestSchedule();
         String scheduleJson = objectMapper.writeValueAsString(testScheduleA);
         mockMvc.perform(
                 MockMvcRequestBuilders.put("/schedules/notExistingId")

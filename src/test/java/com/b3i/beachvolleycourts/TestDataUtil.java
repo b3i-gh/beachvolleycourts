@@ -5,10 +5,12 @@ import com.b3i.beachvolleycourts.domains.Schedule;
 import com.b3i.beachvolleycourts.domains.User;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class TestDataUtil {
-    public static User createTestUserA(){
+    public static User createTestUserA() {
         return User.builder()
                 .id("testUserA")
                 .firstName("First name A")
@@ -21,7 +23,7 @@ public class TestDataUtil {
                 .build();
     }
 
-    public static User createTestUserB(){
+    public static User createTestUserB() {
         return User.builder()
                 .id("testUserB")
                 .firstName("First name B")
@@ -34,7 +36,7 @@ public class TestDataUtil {
                 .build();
     }
 
-    public static User createTestAdmin(){
+    public static User createTestAdmin() {
         return User.builder()
                 .id("testAdmin")
                 .firstName("First name admin")
@@ -47,56 +49,56 @@ public class TestDataUtil {
                 .build();
     }
 
-    public static Schedule createTestScheduleA(){
-        Booking testBookingA = createTestBookingA();
-        Booking testBookingB = createTestBookingB();
-        List<Booking> testBookings = List.of(testBookingA, testBookingB);
-
+    public static Schedule createEmptyTestSchedule() {
         return Schedule.builder()
-                .id("testScheduleA")
+                .id("emptyTestSchedule")
                 .date(LocalDate.now())
                 .startTime("16:00:00")
                 .endTime("23:00:00")
-                .bookings(testBookings)
+                .bookings(new ArrayList<>())
                 .build();
     }
 
-    public static Schedule createTestScheduleB(){
-        Booking testBookingA = createTestBookingA();
-        Booking testBookingB = createTestBookingB();
-        List<Booking> testBookings = List.of(testBookingA, testBookingB);
+    public static Schedule createTestScheduleA() {
+        return Schedule.builder()
+                .id("testScheduleA")
+                .date(LocalDate.now())
+                .startTime("12:00:00")
+                .endTime("20:00:00")
+                .bookings(Arrays.asList(createTestBookingA(), createTestBookingB()))
+                .build();
+    }
 
+    public static Schedule createTestScheduleB() {
         return Schedule.builder()
                 .id("testScheduleB")
-                .date(LocalDate.now().minusDays(1))
-                .startTime("17:00:00")
-                .endTime("22:30:00")
-                .bookings(testBookings)
+                .date(LocalDate.now())
+                .startTime("13:00:00")
+                .endTime("22:00:00")
+                .bookings(Arrays.asList(createTestBookingB()))
                 .build();
     }
 
     public static Booking createTestBookingA() {
-        return Booking.builder()
-                .id("testBookingA")
+        return new Booking().builder()
+                .bookingId("testBookingA")
                 .name("test booking A")
                 .startTime("18:00:00")
                 .endTime("20:00:00")
                 .userId("testUserA")
                 .playerList(null) // TODO test user list
-                .isApproved(true)
                 .notes("note test booking A")
                 .build();
     }
 
     public static Booking createTestBookingB() {
         return Booking.builder()
-                .id("testBookingB")
+                .bookingId("testBookingB")
                 .name("test booking B")
                 .startTime("19:00:00")
                 .endTime("21:30:00")
                 .userId("testUserB")
                 .playerList(null) // TODO test user list
-                .isApproved(true)
                 .notes("note test booking B")
                 .build();
     }

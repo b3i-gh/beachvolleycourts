@@ -5,7 +5,6 @@ import com.b3i.beachvolleycourts.domains.Booking;
 import com.b3i.beachvolleycourts.domains.Schedule;
 import com.b3i.beachvolleycourts.services.BookingService;
 import com.b3i.beachvolleycourts.services.ScheduleService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.AfterEach;
@@ -20,12 +19,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 
 import java.time.LocalDate;
-import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 
 
@@ -52,7 +50,7 @@ public class BookingControllerTests {
 
     @AfterEach
     public void cleanUp() {
-        mongoTemplate.remove(new Query(), "bookings");
+        mongoTemplate.remove(new Query(), "schedules");
     }
 
     @Test
@@ -62,10 +60,10 @@ public class BookingControllerTests {
         testScheduleA.setBookings(Arrays.asList(testBookingA));
         scheduleService.save(testScheduleA);
         mockMvc.perform(
-                MockMvcRequestBuilders.get("/bookings/" + testBookingA.getId())
+                MockMvcRequestBuilders.get("/bookings/" + testBookingA.getBookingId())
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.id").value(testBookingA.getId())
+                MockMvcResultMatchers.jsonPath("$.bookingId").value(testBookingA.getBookingId())
         ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.name").value(testBookingA.getName())
         ).andExpect(
@@ -95,9 +93,9 @@ public class BookingControllerTests {
                 MockMvcRequestBuilders.get("/schedules/" + testScheduleA.getId() + "/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[0].id").value(testBookingA.getId())
+                MockMvcResultMatchers.jsonPath("$[0].bookingId").value(testBookingA.getBookingId())
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$[1].id").value(testBookingB.getId())
+                MockMvcResultMatchers.jsonPath("$[1].bookingId").value(testBookingB.getBookingId())
         ).andExpect(
                 MockMvcResultMatchers.status().isOk()
         );
@@ -114,13 +112,12 @@ public class BookingControllerTests {
     }
 
     @Test
-    public void saveShouldReturnTheCreatedBookingCREATEDHttpResponse() throws Exception {
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
-        scheduleService.save(testScheduleA);
+    public void createBookingShouldReturnTheCreatedBookingCREATEDHttpResponse() throws Exception {
+        Schedule emptyTestSchedule = TestDataUtil.createEmptyTestSchedule();
+        scheduleService.save(emptyTestSchedule);
         Booking testBookingA = TestDataUtil.createTestBookingA();
-        bookingService.save(testScheduleA.getId(), testBookingA);
 
-        String scheduleJson = objectMapper.writeValueAsString(testScheduleA);
+        String scheduleJson = objectMapper.writeValueAsString(emptyTestSchedule);
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/schedules")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -129,25 +126,27 @@ public class BookingControllerTests {
 
         String bookingJson = objectMapper.writeValueAsString(testBookingA);
         mockMvc.perform(
-                MockMvcRequestBuilders.post("/schedules/" + testScheduleA.getId() + "/bookings")
+                MockMvcRequestBuilders.post("/schedules/" + emptyTestSchedule.getId() + "/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingJson)
         ).andExpect(
-                MockMvcResultMatchers.jsonPath("$.id").value(testBookingA.getId())
-        ).andExpect(
                 MockMvcResultMatchers.jsonPath("$.name").value(testBookingA.getName())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.approved").value(false)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.scheduleId").value(emptyTestSchedule.getId())
         ).andExpect(
                 MockMvcResultMatchers.status().isCreated()
         );
     }
 
     @Test
-    public void saveShouldReturnNOTFOUNDHttpResponseIfScheduleDoesntExists() throws Exception {
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
-        scheduleService.save(testScheduleA);
+    public void createBookingShouldReturnNOTFOUNDHttpResponseIfScheduleDoesntExists() throws Exception {
+        Schedule emptyTestSchedule = TestDataUtil.createEmptyTestSchedule();
+        scheduleService.save(emptyTestSchedule);
 
         Booking testBookingA = TestDataUtil.createTestBookingA();
-        bookingService.save(testScheduleA.getId(), testBookingA);
+        bookingService.createBooking(emptyTestSchedule.getId(), testBookingA);
 
         String bookingJson = objectMapper.writeValueAsString(testBookingA);
         mockMvc.perform(
@@ -160,20 +159,20 @@ public class BookingControllerTests {
     }
 
     @Test
-    public void saveShouldReturnNOTACCEPTABLEResponseIfStartTimeIsBeforeScheduleStartTime() throws Exception {
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
-        testScheduleA.setDate(LocalDate.now().plusDays(2));
-        testScheduleA.setStartTime("10:00:00");
-        testScheduleA.setEndTime("14:00:00");
-        scheduleService.save(testScheduleA);
+    public void createBookingShouldReturnNOTACCEPTABLEResponseIfStartTimeIsBeforeScheduleStartTime() throws Exception {
+        Schedule emptyScheduleA = TestDataUtil.createEmptyTestSchedule();
+        emptyScheduleA.setDate(LocalDate.now().plusDays(2));
+        emptyScheduleA.setStartTime("10:00:00");
+        emptyScheduleA.setEndTime("14:00:00");
+        scheduleService.save(emptyScheduleA);
 
         Booking testBookingA = TestDataUtil.createTestBookingA();
         testBookingA.setStartTime("09:00:00");
         testBookingA.setStartTime("13:00:00");
-        bookingService.save(testScheduleA.getId(), testBookingA);
+        bookingService.createBooking(emptyScheduleA.getId(), testBookingA);
 
 
-        String scheduleJson = objectMapper.writeValueAsString(testScheduleA);
+        String scheduleJson = objectMapper.writeValueAsString(emptyScheduleA);
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/schedules")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -182,7 +181,7 @@ public class BookingControllerTests {
 
         String bookingJson = objectMapper.writeValueAsString(testBookingA);
         mockMvc.perform(
-                MockMvcRequestBuilders.post("/schedules/" + testScheduleA.getId() + "/bookings")
+                MockMvcRequestBuilders.post("/schedules/" + emptyScheduleA.getId() + "/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingJson)
         ).andExpect(
@@ -191,20 +190,20 @@ public class BookingControllerTests {
     }
 
     @Test
-    public void saveShouldReturnNOTACCEPTABLEResponseIfEndTimeIsAfterScheduleEndTime() throws Exception {
-        Schedule testScheduleA = TestDataUtil.createTestScheduleA();
-        testScheduleA.setDate(LocalDate.now().plusDays(2));
-        testScheduleA.setStartTime("10:00:00");
-        testScheduleA.setEndTime("14:00:00");
-        scheduleService.save(testScheduleA);
+    public void createBookingShouldReturnNOTACCEPTABLEResponseIfEndTimeIsAfterScheduleEndTime() throws Exception {
+        Schedule emptyScheduleA = TestDataUtil.createEmptyTestSchedule();
+        emptyScheduleA.setDate(LocalDate.now().plusDays(2));
+        emptyScheduleA.setStartTime("10:00:00");
+        emptyScheduleA.setEndTime("14:00:00");
+        scheduleService.save(emptyScheduleA);
 
         Booking testBookingA = TestDataUtil.createTestBookingA();
         testBookingA.setStartTime("10:30:00");
         testBookingA.setStartTime("18:00:00");
-        bookingService.save(testScheduleA.getId(), testBookingA);
+        bookingService.createBooking(emptyScheduleA.getId(), testBookingA);
 
 
-        String scheduleJson = objectMapper.writeValueAsString(testScheduleA);
+        String scheduleJson = objectMapper.writeValueAsString(emptyScheduleA);
         mockMvc.perform(
                 MockMvcRequestBuilders.post("/schedules")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -213,7 +212,7 @@ public class BookingControllerTests {
 
         String bookingJson = objectMapper.writeValueAsString(testBookingA);
         mockMvc.perform(
-                MockMvcRequestBuilders.post("/schedules/" + testScheduleA.getId() + "/bookings")
+                MockMvcRequestBuilders.post("/schedules/" + emptyScheduleA.getId() + "/bookings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingJson)
         ).andExpect(
@@ -221,4 +220,96 @@ public class BookingControllerTests {
         );
     }
 
+    @Test
+    public void updateBookingShouldReturnUpdatedBookingAndOKHttpResponseIfBookingExists() throws Exception {
+        Schedule emptyTestSchedule = TestDataUtil.createEmptyTestSchedule();
+        scheduleService.save(emptyTestSchedule);
+        Booking testBookingA = TestDataUtil.createTestBookingA();
+
+        String scheduleJson = objectMapper.writeValueAsString(emptyTestSchedule);
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(scheduleJson)
+        );
+
+        String bookingJson = objectMapper.writeValueAsString(testBookingA);
+        MvcResult res = mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules/" + emptyTestSchedule.getId() + "/bookings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingJson)
+        ).andReturn();
+        Booking updatedBooking = objectMapper.readValue(res.getResponse().getContentAsString(), Booking.class);
+
+        updatedBooking.setName("UPDATED");
+        updatedBooking.setScheduleId(emptyTestSchedule.getId());
+        String updatedBookingJson = objectMapper.writeValueAsString(updatedBooking);
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/" + updatedBooking.getBookingId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedBookingJson)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.name").value("UPDATED")
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
+    }
+
+    @Test
+    public void updateBookingShouldReturnNOTFOUNDHttpResponseIfBookingDoesntExists() throws Exception{
+        Booking testBookingA = TestDataUtil.createTestBookingA();
+
+        String bookingJson = objectMapper.writeValueAsString(testBookingA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/notExistingId/bookings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingJson)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNotFound()
+        );
+    }
+
+    @Test
+    public void approveBookingShouldUpdateIsApprovedReturnBookingAndOKHttpResponseIfBookingExists() throws Exception {
+        Schedule emptyScheduleA = TestDataUtil.createEmptyTestSchedule();
+        scheduleService.save(emptyScheduleA);
+        Booking testBookingA = TestDataUtil.createTestBookingA();
+
+        String scheduleJson = objectMapper.writeValueAsString(emptyScheduleA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(scheduleJson)
+        );
+
+        String bookingJson = objectMapper.writeValueAsString(testBookingA);
+        MvcResult mvcResult = mockMvc.perform(
+                 MockMvcRequestBuilders.post("/schedules/" + emptyScheduleA.getId() + "/bookings")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(bookingJson)
+        ).andReturn();
+
+        testBookingA = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Booking.class);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/approve/" + testBookingA.getBookingId())
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.bookingId").value(testBookingA.getBookingId())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.approved").value(true)
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
+    }
+
+    @Test
+    public void approveBookingShouldReturnNOTFOUNDHttpResponseIfBookingDoesntExists() throws Exception {
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/notExistingId/approve")
+                        .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNotFound()
+        );
+    }
 }

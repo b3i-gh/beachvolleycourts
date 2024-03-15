@@ -5,8 +5,11 @@ import com.b3i.beachvolleycourts.domains.Schedule;
 import com.b3i.beachvolleycourts.repositories.BookingRepository;
 import com.b3i.beachvolleycourts.services.BookingService;
 import com.b3i.beachvolleycourts.services.ScheduleService;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -22,11 +25,12 @@ public class BookingServiceImpl implements BookingService {
         this.scheduleService = scheduleService;
     }
 
+    @Override
     public Optional<Booking> findBookingById(String id){
         List<Schedule> schedules = scheduleService.findAll();
         Optional<Booking> booking = schedules.stream()
                 .flatMap(schedule -> schedule.getBookings().stream())
-                .filter(b -> b.getId().equals(id))
+                .filter(b -> b.getBookingId().equals(id))
                 .findFirst();
         if(booking.isPresent())
             return booking;
@@ -40,17 +44,70 @@ public class BookingServiceImpl implements BookingService {
         if (!schedule.isPresent())
             throw new RuntimeException("Schedule does not exists");
         else {
-            return StreamSupport.stream(
+            if(schedule.get().getBookings() != null)
+                return StreamSupport.stream(
                     schedule.get().getBookings().spliterator(), false)
                     .collect(Collectors.toList());
+            else return new ArrayList<>();
         }
     }
 
     @Override
-    public Schedule save(String scheduleId, Booking booking) {
-        return scheduleService.findById(scheduleId).map(existingSchedule -> {
+    public Booking createBooking(String scheduleId, Booking booking) {
+        Schedule existingSchedule = scheduleService.findById(scheduleId).orElse(null);
+        if(existingSchedule == null)
+            throw new RuntimeException("Schedule does not exists");
+
+        booking.setBookingId(new ObjectId().toString());
+        booking.setApproved(false);
+        booking.setScheduleId(scheduleId);
+
+        if(existingSchedule.getBookings() == null)
+            existingSchedule.setBookings(Arrays.asList(booking));
+        else
             existingSchedule.getBookings().add(booking);
-            return scheduleService.partialUpdate(scheduleId, existingSchedule);
+
+        scheduleService.save(existingSchedule);
+
+        return booking;
+    }
+
+    @Override
+    public Booking updateBooking(String bookingId, Booking booking){
+        return scheduleService.findById(booking.getScheduleId()).map(existingSchedule -> {
+            Booking updatedBooking = new Booking();
+            List<Booking> updatedBookings = existingSchedule.getBookings();
+            updatedBookings
+                    .stream()
+                    .filter(b -> b.getBookingId().equals(bookingId))
+                    .map(existingBooking -> {
+                        Optional.ofNullable((booking.getStartTime())).ifPresent(existingBooking::setStartTime);
+                        Optional.ofNullable((booking.getEndTime())).ifPresent(existingBooking::setEndTime);
+                        Optional.ofNullable((booking.getName())).ifPresent(existingBooking::setName);
+                        Optional.ofNullable((booking.getUserId())).ifPresent(existingBooking::setUserId);
+                        Optional.ofNullable((booking.getPlayerList())).ifPresent(existingBooking::setPlayerList);
+                        Optional.ofNullable((booking.isApproved())).ifPresent(existingBooking::setApproved);
+                        Optional.ofNullable((booking.getNotes())).ifPresent(existingBooking::setNotes);
+                        Optional.ofNullable((booking.getCancellationNotes())).ifPresent(existingBooking::setCancellationNotes);
+                        Optional.ofNullable((booking.getCancellationDate())).ifPresent(existingBooking::setCancellationDate);
+                        Optional.ofNullable((booking.getScheduleId())).ifPresent(existingBooking::setScheduleId);
+                        return existingBooking;
+                    }).collect(Collectors.toList());
+            existingSchedule.setBookings(updatedBookings);
+            scheduleService.partialUpdate(existingSchedule.getId(), existingSchedule);
+            return booking;
         }).orElseThrow(() -> new RuntimeException("Schedule does not exists"));
+    }
+
+    @Override
+    public Booking approveBooking(String bookingId) {
+        Optional<Booking> booking = findBookingById(bookingId);
+        if (booking == null)
+            throw new RuntimeException("Booking does not exists");
+        else {
+            booking.get().setApproved(true);
+            updateBooking(booking.get().getBookingId(), booking.get());
+            return booking.get();
+        }
     }
 }

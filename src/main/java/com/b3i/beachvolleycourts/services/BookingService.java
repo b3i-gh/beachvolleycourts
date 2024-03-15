@@ -12,5 +12,10 @@ public interface BookingService {
 
     List<Booking> findBookingsByScheduleId(String scheduleId);
 
-    Schedule save(String scheduleId, Booking booking);
+    Booking createBooking(String scheduleId, Booking booking);
+
+    Booking updateBooking(String bookingId, Booking booking);
+
+    Booking approveBooking(String bookingId);
+
 }

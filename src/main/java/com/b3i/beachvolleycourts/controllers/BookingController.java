@@ -40,7 +40,8 @@ public class BookingController {
     }
 
     @PostMapping(path = "/schedules/{scheduleId}/bookings")
-    public ResponseEntity<Booking> save(@PathVariable("scheduleId") String scheduleId, @RequestBody Booking booking) {
+    public ResponseEntity<Booking> createBooking(@PathVariable("scheduleId") String scheduleId, @RequestBody Booking booking) {
+        // Check the existence of the schedule
         Optional<Schedule> foundSchedule = scheduleService.findById(scheduleId);
         if (!foundSchedule.isPresent())
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -48,11 +49,27 @@ public class BookingController {
             if (LocalTime.parse(booking.getEndTime()).isAfter(LocalTime.parse(foundSchedule.get().getEndTime()))
                     || LocalTime.parse(booking.getStartTime()).isBefore(LocalTime.parse(foundSchedule.get().getStartTime())))
                 return new ResponseEntity(booking, HttpStatus.NOT_ACCEPTABLE);
+        }
 
-            // TODO: check maximum schedule capacity in a slot;
+        // TODO: check maximum schedule capacity in a slot;
+        bookingService.createBooking(scheduleId, booking);
+        return new ResponseEntity(booking, HttpStatus.CREATED);
+    }
 
-            bookingService.save(scheduleId, booking);
-            return new ResponseEntity(booking, HttpStatus.CREATED);
+    @PutMapping(path = "/bookings/{bookingId}")
+    public ResponseEntity<Booking> updateBooking(@PathVariable("bookingId") String bookingId, @RequestBody Booking booking) {
+        if(bookingService.findBookingById(bookingId) == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        bookingService.updateBooking(bookingId, booking);
+        return new ResponseEntity(booking, HttpStatus.OK);
+    }
+
+    @PutMapping(path = "bookings/approve/{bookingId}")
+    public ResponseEntity<Booking> approveBooking(@PathVariable("bookingId") String bookingId) {
+        try {
+            return new ResponseEntity(bookingService.approveBooking(bookingId), HttpStatus.OK);
+        } catch (Exception e){
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
 }
