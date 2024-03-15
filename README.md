@@ -36,8 +36,7 @@ Administrators will have the ability to confirm reservation requests, validate c
 
 
 
-# todo:
-* divide create and update booking in two api (post / put)
+# ¡todo:
 * Administrative Options (Booking Confirmation, Payment Confirmation, Direct Course Input, Forced Booking Cancellation)
 * Graphic interface
 * when you create a booking you should test the maximum capacity of a schedule slot
