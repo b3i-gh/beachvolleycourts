@@ -37,7 +37,7 @@ Administrators will have the ability to confirm reservation requests, validate c
 
 
 # ¡todo:
-* Administrative Options (Booking Confirmation, Payment Confirmation, Direct Course Input, Forced Booking Cancellation)
+* Administrative Options (Payment Confirmation)
 * Graphic interface
 * when you create a booking you should test the maximum capacity of a schedule slot
 * find schedules by date, time period?

@@ -8,6 +8,8 @@ import com.b3i.beachvolleycourts.services.ScheduleService;
 import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -106,6 +108,19 @@ public class BookingServiceImpl implements BookingService {
             throw new RuntimeException("Booking does not exists");
         else {
             booking.get().setApproved(true);
+            updateBooking(booking.get().getBookingId(), booking.get());
+            return booking.get();
+        }
+    }
+
+    @Override
+    public Booking cancelBooking(String bookingId, String cancellationNotes){
+        Optional<Booking> booking = findBookingById(bookingId);
+        if (booking == null)
+            throw new RuntimeException("Booking does not exists");
+        else {
+            booking.get().setCancellationDate(LocalDate.now());
+            booking.get().setCancellationNotes(cancellationNotes);
             updateBooking(booking.get().getBookingId(), booking.get());
             return booking.get();
         }

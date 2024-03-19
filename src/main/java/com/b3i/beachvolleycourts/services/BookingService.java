@@ -18,4 +18,6 @@ public interface BookingService {
 
     Booking approveBooking(String bookingId);
 
+    Booking cancelBooking(String bookingId, String cancellationNote);
+
 }

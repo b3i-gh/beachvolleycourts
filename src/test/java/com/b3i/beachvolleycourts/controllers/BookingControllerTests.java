@@ -5,6 +5,7 @@ import com.b3i.beachvolleycourts.domains.Booking;
 import com.b3i.beachvolleycourts.domains.Schedule;
 import com.b3i.beachvolleycourts.services.BookingService;
 import com.b3i.beachvolleycourts.services.ScheduleService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.AfterEach;
@@ -261,7 +262,7 @@ public class BookingControllerTests {
 
         String bookingJson = objectMapper.writeValueAsString(testBookingA);
         mockMvc.perform(
-                MockMvcRequestBuilders.put("/bookings/notExistingId/bookings")
+                MockMvcRequestBuilders.put("/bookings/notExistingId")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bookingJson)
         ).andExpect(
@@ -306,10 +307,121 @@ public class BookingControllerTests {
     @Test
     public void approveBookingShouldReturnNOTFOUNDHttpResponseIfBookingDoesntExists() throws Exception {
         mockMvc.perform(
-                MockMvcRequestBuilders.put("/bookings/notExistingId/approve")
+                MockMvcRequestBuilders.put("/bookings/approve/notExistingId")
                         .contentType(MediaType.APPLICATION_JSON)
         ).andExpect(
                 MockMvcResultMatchers.status().isNotFound()
+        );
+    }
+
+    @Test
+    public void cancelBookingShouldReturnCancelledBookingAndOKHttpResponseIfBookingExists() throws Exception {
+        Schedule emptyScheduleA = TestDataUtil.createEmptyTestSchedule();
+        scheduleService.save(emptyScheduleA);
+        Booking testBookingA = TestDataUtil.createTestBookingA();
+
+        String scheduleJson = objectMapper.writeValueAsString(emptyScheduleA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(scheduleJson)
+        );
+
+        String bookingJson = objectMapper.writeValueAsString(testBookingA);
+        MvcResult mvcResult = mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules/" + emptyScheduleA.getId() + "/bookings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingJson)
+        ).andReturn();
+
+        testBookingA = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Booking.class);
+        testBookingA.setCancellationNotes("cancellation test note");
+        String canceledBookingJson = objectMapper.writeValueAsString(testBookingA);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/cancel/" + testBookingA.getBookingId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(canceledBookingJson)
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.cancellationNotes").value(testBookingA.getCancellationNotes())
+        ).andExpect(
+                MockMvcResultMatchers.jsonPath("$.cancellationDate").isNotEmpty()
+        ).andExpect(
+                MockMvcResultMatchers.status().isOk()
+        );
+    }
+
+    @Test
+    public void cancelBookingShouldReturnNOTFOUNDHttpResponseIfBookingDoesntExists() throws Exception {
+        Schedule emptyScheduleA = TestDataUtil.createEmptyTestSchedule();
+        scheduleService.save(emptyScheduleA);
+        Booking testBookingA = TestDataUtil.createTestBookingA();
+
+        String scheduleJson = objectMapper.writeValueAsString(emptyScheduleA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(scheduleJson)
+        );
+
+        String bookingJson = objectMapper.writeValueAsString(testBookingA);
+        MvcResult mvcResult = mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules/" + emptyScheduleA.getId() + "/bookings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingJson)
+        ).andReturn();
+
+        testBookingA = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Booking.class);
+        testBookingA.setCancellationNotes("cancellation test note");
+        String canceledBookingJson = objectMapper.writeValueAsString(testBookingA);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/cancel/notExistingId")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(canceledBookingJson)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNotFound()
+        );
+    }
+
+    @Test
+    public void cancelBookingShouldReturnNOTACCEPTABLEHttpResponseIfBookingIsAlreadyCanceled() throws Exception {
+        Schedule emptyScheduleA = TestDataUtil.createEmptyTestSchedule();
+        scheduleService.save(emptyScheduleA);
+        Booking testBookingA = TestDataUtil.createTestBookingA();
+
+        String scheduleJson = objectMapper.writeValueAsString(emptyScheduleA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(scheduleJson)
+        );
+
+        String bookingJson = objectMapper.writeValueAsString(testBookingA);
+        MvcResult mvcResult = mockMvc.perform(
+                MockMvcRequestBuilders.post("/schedules/" + emptyScheduleA.getId() + "/bookings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookingJson)
+        ).andReturn();
+
+        testBookingA = objectMapper.readValue(mvcResult.getResponse().getContentAsString(), Booking.class);
+        testBookingA.setCancellationNotes("cancellation test note");
+        String canceledBookingJson = objectMapper.writeValueAsString(testBookingA);
+
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/cancel/" + testBookingA.getBookingId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(canceledBookingJson)
+        );
+
+        testBookingA.setCancellationNotes("updated test note");
+        String updatedBookingJson = objectMapper.writeValueAsString(testBookingA);
+        mockMvc.perform(
+                MockMvcRequestBuilders.put("/bookings/cancel/" + testBookingA.getBookingId())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedBookingJson)
+        ).andExpect(
+                MockMvcResultMatchers.status().isNotAcceptable()
         );
     }
 }

@@ -4,10 +4,12 @@ import com.b3i.beachvolleycourts.domains.Booking;
 import com.b3i.beachvolleycourts.domains.Schedule;
 import com.b3i.beachvolleycourts.services.BookingService;
 import com.b3i.beachvolleycourts.services.ScheduleService;
+import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.awt.print.Book;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
@@ -64,12 +66,25 @@ public class BookingController {
         return new ResponseEntity(booking, HttpStatus.OK);
     }
 
-    @PutMapping(path = "bookings/approve/{bookingId}")
+    @PutMapping(path = "/bookings/approve/{bookingId}")
     public ResponseEntity<Booking> approveBooking(@PathVariable("bookingId") String bookingId) {
         try {
             return new ResponseEntity(bookingService.approveBooking(bookingId), HttpStatus.OK);
         } catch (Exception e){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+    @PutMapping(path = "/bookings/cancel/{bookingId}")
+    public ResponseEntity<Booking> cancelBooking(@PathVariable("bookingId") String bookingId, @RequestBody Booking booking){
+        Optional <Booking> foundBooking = bookingService.findBookingById(bookingId);
+        if(foundBooking == null)
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        else {
+            if(foundBooking.get().getCancellationDate() != null)
+                return new ResponseEntity<>(HttpStatus.NOT_ACCEPTABLE);
+
+            String cancellationNotes = booking.getCancellationNotes() == null ? "" : booking.getCancellationNotes();
+            return new ResponseEntity(bookingService.cancelBooking(bookingId, cancellationNotes), HttpStatus.OK);
         }
     }
 }
